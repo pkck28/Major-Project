@@ -3,8 +3,8 @@ function xd = FA_18_Nonlinear(t,x,u)
     FA_18_data;
 
     V       =  x(1);        % Airspeed , ft/s
-    alpha   =  x(2);        % Angle-of-attack, rad
-    beta    =  x(3);        % Sideslip Angle, rad
+    beta    =  x(2);        % Sideslip Angle, rad
+    alpha   =  x(3);        % Angle-of-attack, rad
     
     p       =  x(4);        % Roll rate, rad/s
     q       =  x(5);        % Pitch rate, rad/s
@@ -39,17 +39,34 @@ function xd = FA_18_Nonlinear(t,x,u)
     sintheta = sin(theta); 
     sectheta = sec(theta);
     tantheta =  tan(theta);
-    
+
     cospsi = cos(psi);
     sinpsi = sin(psi);
     
+%     cosbeta = 1 - (beta^2)/2; 
+%     secbeta = 1 + (beta^2)/2; 
+%     cos2beta3 = 1 - ((2*beta/3)^2)/2;
+%     sinbeta = beta - beta^3/6; 
+%     tanbeta = beta + beta^3/3; 
+% 
+%     cosalpha = 1 - alpha^2/2; 
+%     sinalpha = alpha - alpha^3/6; 
+% 
+%     cosphi = 1 - phi^2/2; 
+%     sinphi = phi - phi^3/6; 
+% 
+%     costheta = 1 - theta^2/2; 
+%     sintheta = theta - theta^3/6; 
+%     sectheta = 1 + theta^2/2;
+%     tantheta =  theta + theta^3/3; 
+
     % Rolling Moment   
     Clb     =  F18Aero.Clb_0 + F18Aero.Clb_1*alpha + F18Aero.Clb_2*alpha^2 ...
               + F18Aero.Clb_3*alpha^3  + F18Aero.Clb_4*alpha^4;
     Cldr    =  F18Aero.Cldr_0 + F18Aero.Cldr_1*alpha + F18Aero.Cldr_2*alpha^2 ...
               + F18Aero.Cldr_3*alpha^3; 
     Clda    =  F18Aero.Clda_0 + F18Aero.Clda_1*alpha + F18Aero.Clda_2*alpha^2 ...
-              + F18Aero.Clda_3*alpha^3 ; 
+              + F18Aero.Clda_3*alpha^3; 
     Clp     =  F18Aero.Clp_0 + F18Aero.Clp_1*alpha; 
     Clr     =  F18Aero.Clr_0 + F18Aero.Clr_1*alpha + F18Aero.Clr_2*alpha^2;
 
@@ -110,7 +127,7 @@ function xd = FA_18_Nonlinear(t,x,u)
     % -------------------------------------------------
     % Form Aerodynamic forces and moments
 
-    qbar = 1/2*rho*V^2;  % Dynamic pressure
+    qbar = 1/2*rho*V^2;
     L =  C_l*qbar*S*b;
     M =  C_m*qbar*S*c;
     N =  C_n*qbar*S*b;
@@ -118,33 +135,19 @@ function xd = FA_18_Nonlinear(t,x,u)
     Lift = C_lift*qbar*S ;
     Drag = C_drag*qbar*S ;
 
-    % Body to Wind Axis Conversion of the Aerodynamic data
-    CD_w = C_drag*cosbeta - C_Y*sinbeta;
-    CY_w =  C_Y*cosbeta + C_drag*sinbeta;
-
-    %==========================================================================
-    % Equations of Motion
-    %
-    % References: 
-    % 
-    % (i) Determination of the stability and control derivatives of the 
-    %     NASA F/A-18 HARV using flight data; 
-    %     Marcello R. Napolitano and Joelle M. Spagnuolo,NASA CR-194838, 1993. 
-
-    %--------------------------------------------------------------------------
     % Force Equation 
 
-    Vd =  -qbar*S*CD_w/m + g*(cosphi*costheta*sinalpha*cosbeta + ...
+    Vd =  -(Drag*cosbeta - Y*sinbeta)/m + g*(cosphi*costheta*sinalpha*cosbeta + ...
          sinphi*costheta*sinbeta -sintheta*cosalpha*cosbeta) ...
          + (T/m)*cosbeta*cosalpha;
+     
+    betad =  (Y*cosbeta + Drag*sinbeta)/m/V + p*sinalpha - r*cosalpha + ....
+         g*costheta*sinphi*cosbeta/V + sinbeta*(g*cosalpha*sintheta...
+       - g*sinalpha*cosphi*costheta + T*cosalpha/m)/V; 
      
     alphad = -Lift*secbeta/m/V + q - tanbeta*(p*cosalpha + r*sinalpha)...
               + g*(cosphi*costheta*cosalpha + sintheta*sinalpha)*secbeta/V...
               -(T*secbeta/m/V)*sinalpha;
-
-    betad =  qbar*S*CY_w/m/V + p*sinalpha - r*cosalpha + ....
-             g*costheta*sinphi*cosbeta/V + sinbeta*(g*cosalpha*sintheta...
-             - g*sinalpha*cosphi*costheta + T*cosalpha/m)/V;
 
     %--------------------------------------------------------------------------
     % Moment Equations
@@ -182,5 +185,5 @@ function xd = FA_18_Nonlinear(t,x,u)
     %--------------------------------------------------------------------------
     % Stacking it up in State
 
-    xd = [Vd; alphad; betad; pd; qd; rd; phid; thetad; psid; pNd; pEd; hd];
+    xd = [Vd; betad; alphad; pd; qd; rd; phid; thetad; psid; pNd; pEd; hd];
 end
