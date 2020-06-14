@@ -2,7 +2,6 @@
     clc;
     close all;
     
-    %opts = odeset('RelTol',1e-10,'AbsTol',1e-10);
     
     d2r = pi/180;           % Degree to radian conversion factor
 
@@ -25,8 +24,8 @@
     % Initial Condition for the States
     x0 = [V;beta;alpha;p;q;r;phi;theta;psi;pN;pE;h];  
     
-    tfl = [0 400];                % time scale 
-    u = [0;0;-2.253067*d2r;5469.045822];        % Input
+    tfl = [0 60];                % time scale 
+    u = [0;0;-2.253*d2r;5469];        % Input
     
     % Solve the Equations
     [t,y] = ode45(@FA_18_Nonlinear,tfl,x0,[],u);
@@ -43,5 +42,5 @@
     plot(t,theta);
     hold off
     legend('alpha','theta')
-    
+    grid on
     

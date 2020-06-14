@@ -42,23 +42,6 @@ function xd = FA_18_Nonlinear(t,x,u)
 
     cospsi = cos(psi);
     sinpsi = sin(psi);
-    
-%     cosbeta = 1 - (beta^2)/2; 
-%     secbeta = 1 + (beta^2)/2; 
-%     cos2beta3 = 1 - ((2*beta/3)^2)/2;
-%     sinbeta = beta - beta^3/6; 
-%     tanbeta = beta + beta^3/3; 
-% 
-%     cosalpha = 1 - alpha^2/2; 
-%     sinalpha = alpha - alpha^3/6; 
-% 
-%     cosphi = 1 - phi^2/2; 
-%     sinphi = phi - phi^3/6; 
-% 
-%     costheta = 1 - theta^2/2; 
-%     sintheta = theta - theta^3/6; 
-%     sectheta = 1 + theta^2/2;
-%     tantheta =  theta + theta^3/3; 
 
     % Rolling Moment   
     Clb     =  F18Aero.Clb_0 + F18Aero.Clb_1*alpha + F18Aero.Clb_2*alpha^2 ...

@@ -12,11 +12,17 @@ alpha = 1:points;
 del_stab = zeros(1,points);
 alpha = deg2rad(alpha);
 
+%% Zero moment calculation for alpa, del_stab
+
+% Del_Stab - Alpha 
+
 for i = 1:points
     Cma     =  F18Aero.Cma_0 + F18Aero.Cma_1*alpha(i) + F18Aero.Cma_2*alpha(i)^2; 
     Cmds    =  F18Aero.Cmds_0 + F18Aero.Cmds_1*alpha(i) + F18Aero.Cmds_2*alpha(i)^2; 
     del_stab(i) = -Cma/Cmds;
 end
+
+%% Lift and Drag Coefficient Calculations
 
 C_lift = zeros(1,points);
 C_drag = zeros(1,points);
@@ -37,6 +43,8 @@ for i = 1:points
     C_drag(i) = Cda + Cd0 + Cdds*del_stab(i) ;
 end
 
+%% Thrust and Velocity Calculations
+
 V = zeros(1,points);
 
 for i = 1:points
@@ -54,8 +62,8 @@ end
 %% Plotting
 
 for i = 1:points
-    if del_stab(i) < -24*d2r
-        del_stab(i) = -24*d2r;
+    if del_stab(i) < -deg2rad(24)
+        del_stab(i) = -deg2rad(24);
     end
 end
 
