@@ -1,17 +1,17 @@
 % For calculating the alpha for a given elevator deflection for steady
 % level flight. 
-% clc;
-% clear;
-% close all;
+clc;
+clear;
+close all;
 
 load('FA_18_Parameters.mat');
 
 points = 40;
-points_beta = 20;
+points_beta = 14;
 
-alpha = 1:points;
-del_stab = zeros(1,points);
-beta = -10:1:10;
+alpha = 2:points;
+del_stab = zeros(1,points-1);
+beta = -7:1:7;
 alpha = deg2rad(alpha);
 beta = deg2rad(beta);
 
@@ -19,7 +19,7 @@ beta = deg2rad(beta);
 
 % Del_Stab - Alpha 
 
-for i = 1:points
+for i = 1:points-1
     Cma     =  F18Aero.Cma_0 + F18Aero.Cma_1*alpha(i) + F18Aero.Cma_2*alpha(i)^2; 
     Cmds    =  F18Aero.Cmds_0 + F18Aero.Cmds_1*alpha(i) + F18Aero.Cmds_2*alpha(i)^2; 
     del_stab(i) = -Cma/Cmds;
@@ -27,10 +27,10 @@ end
 
 % alpha - del_rud => del_ail - beta
 
-del_rud = zeros(points,points_beta+1);
-del_ail = zeros(points,points_beta+1);
+del_rud = zeros(points-1,points_beta+1);
+del_ail = zeros(points-1,points_beta+1);
 
-for i = 1:points
+for i = 1:points-1
     
     a = alpha(i);
     
@@ -46,12 +46,6 @@ for i = 1:points
              + F18Aero.Cldr_3*a^3;
     Clda    =  F18Aero.Clda_0 + F18Aero.Clda_1*a + F18Aero.Clda_2*a^2 ...
              + F18Aero.Clda_3*a^3;
-         
-    Cyb     = F18Aero.Cyb_0 + F18Aero.Cyb_1*a + F18Aero.Cyb_2*a^2 ; 
-    Cyda    = F18Aero.Cyda_0 + F18Aero.Cyda_1*a + F18Aero.Cyda_2*a^2 ...
-             + F18Aero.Cyda_3*a^3; 
-    Cydr    = F18Aero.Cydr_0 + F18Aero.Cydr_1*a + F18Aero.Cydr_2*a^2 ...
-             + F18Aero.Cydr_3*a^3;
     
     for j = 1:points_beta+1        
         del_rud(i,j) = beta(j) * (Clda*Cnb - Cnda*Clb) / ...
@@ -62,44 +56,71 @@ end
 
 %% Lift, Drag, and Sideforce Coefficient Calculations
 
-C_lift = zeros(1,points);
-C_drag = zeros(1,points);
+C_lift = zeros(points-1,points_beta+1);
+C_drag = zeros(points-1,points_beta+1);
+C_Y = zeros(points-1,points_beta+1);
 
-for i = 1:points
+for i = 1:points-1
     CLds = F18Aero.CLds_0 + F18Aero.CLds_1*alpha(i) + F18Aero.CLds_2*alpha(i)^2 ...
             + F18Aero.CLds_3*alpha(i)^3;
     CLa = (-0.0204 + 5.677*alpha(i) - 5.4246*alpha(i)^2 + 1.1645*alpha(i)^3);
-    C_lift(i) = CLa*cos(2*beta(i)/3) +  CLds*del_stab(i);
+    for j = 1:points_beta+1        
+        C_lift(i,j) = CLa*cos(2*beta(j)/3) +  CLds*del_stab(i);
+    end
 end
 
-for i = 1:points
+for i = 1:points-1
     Cdds = F18Aero.Cdds_0 + F18Aero.Cdds_1*alpha(i)+ F18Aero.Cdds_2*alpha(i)^2 ...
-           + F18Aero.Cdds_3*alpha(i)^3;  
+               + F18Aero.Cdds_3*alpha(i)^3;  
     Cd0 = 1.5036;
     Cda = (-1.4994 - 0.1995*alpha(i) + 6.3971*alpha(i)^2 - 5.7341*alpha(i)^3 + ....
-               1.4610*alpha(i)^4);
-    C_drag(i) = Cda*cos(beta(i)) + Cd0 + Cdds*del_stab(i) ;
+                   1.4610*alpha(i)^4);
+    for j = 1:points_beta+1        
+        C_drag(i,j) = Cda*cos(beta(j)) + Cd0 + Cdds*del_stab(i);
+    end
 end
 
-%% Thrust and Velocity Calculations
-
-V = zeros(1,points);
-
-for i = 1:points
-    tantheta = tan(alpha(i));
-    V(i) = sqrt(2*m*g/rho/S/tantheta/(C_drag(i) + C_lift(i)/tantheta/cos(beta(i))));
+for i = 1:points-1
+    a = alpha(i);
+    Cyb     = F18Aero.Cyb_0 + F18Aero.Cyb_1*a + F18Aero.Cyb_2*a^2 ; 
+    Cyda    = F18Aero.Cyda_0 + F18Aero.Cyda_1*a + F18Aero.Cyda_2*a^2 ...
+             + F18Aero.Cyda_3*a^3; 
+    Cydr    = F18Aero.Cydr_0 + F18Aero.Cydr_1*a + F18Aero.Cydr_2*a^2 ...
+             + F18Aero.Cydr_3*a^3;
+    for j = 1:points_beta+1        
+        C_Y(i,j) = Cyb*beta(j) + Cyda*del_ail(i,j) + Cydr*del_rud(i,j);
+    end
 end
 
-% T = zeros(1,points);
-% 
-% for i = 1:points
-%     costheta = cos(alpha(i));
-%     T(i) = C_drag(i)*0.5*rho*V(i)^2*S/costheta;
-% end
+%% Thrust, Velocity and phi Calculations
+
+phi = zeros(points-1,points_beta+1);
+
+for i = 1:points-1
+    for j = 1:points_beta+1        
+        phi(i,j) = asin(( C_Y(i,j) + C_drag(i,j)*tan(beta(j)) )/C_lift(i,j) );
+    end
+end
+
+V = zeros(points-1,points_beta+1);
+
+for i = 1:points-1
+    for j = 1:points_beta+1
+        K = C_lift(i,j)*cos(phi(i,j)) + C_drag(i,j)*tan(alpha(i))/cos(beta(j));
+        V(i,j) = sqrt(2*m*g/rho/S/K);
+    end    
+end
+
+T = zeros(points-1,points_beta+1);
+
+for i = 1:points-1
+    for j = 1:points_beta+1
+        T(i,j) = 0.5*rho*(V(i,j))^2*S*C_drag(i,j)/cos(alpha(i))/cos(beta(j));
+    end
+end
 
 %% Plotting
-
-for i = 1:points
+for i = 1:points-1
     if del_stab(i) < -deg2rad(24)
         del_stab(i) = -deg2rad(24);
     end
@@ -124,48 +145,35 @@ Y = rad2deg(beta);
 
 [X,Y] = meshgrid(Y,X);
 surf(X,Y,rad2deg(del_rud));
+xlabel('Beta (in degree)');
+ylabel('Alpha (in degree)');
+zlabel('Rudder Deflection (in degree)');
+title('Del_(rud) vs Alpha and Beta for stable level flight');
 
 figure(3);
 surf(X,Y,rad2deg(del_ail));
+xlabel('Beta (in degree)');
+ylabel('Alpha (in degree)');
+zlabel('Aileron Deflection (in degree)');
+title('Del_(ail) vs Alpha and Beta for stable level flight');
 
-% % C_L vs Alpha
-% figure(2);
-% plot(rad2deg(alpha),C_lift,'LineWidth',1.5);
-% grid on;
-% xlabel('Alpha (in degree)');
-% ylabel('C_L');
-% title('C_L vs Alpha for stable level flight');
-% 
-% % C_D vs Alpha
-% figure(3);
-% plot(rad2deg(alpha),C_drag,'LineWidth',1.5);
-% grid on;
-% xlabel('Alpha (in degree)');
-% ylabel('C_D');
-% title('C_D vs Alpha for stable level flight');
-% 
-% % C_L vs C_D
-% figure(4);
-% plot(C_drag,C_lift,'LineWidth',1.5);
-% grid on;
-% xlabel('C_D');
-% ylabel('C_L');
-% title('C_L vs C_D');
-% 
-% % V vs alpha
-% figure(4);
-% plot(rad2deg(alpha),V,'LineWidth',1.5);
-% hold on;
-% plot(15.29,350,'+');
-% grid on;
-% xlabel('Alpha (in degree)');
-% ylabel('V (in ft)');
-% title('Velocity vs alpha');
-% 
-% % T vs alpha
-% figure(5);
-% plot(rad2deg(alpha),T,'LineWidth',1.5);
-% grid on;
-% xlabel('Alpha (in degree)');
-% ylabel('T (in lbs)');
-% title('Thrust vs alpha');
+figure(4);
+surf(X,Y,rad2deg(phi));
+xlabel('Beta (in degree)');
+ylabel('Alpha (in degree)');
+zlabel('Bank Angle (in degree)');
+title('Bank Angle vs Alpha and Beta for stable level flight');
+
+figure(5);
+surf(X,Y,V);
+xlabel('Beta (in degree)');
+ylabel('Alpha (in degree)');
+zlabel('Velocity (in ft/s)');
+title('Velocity vs Alpha and Beta for stable level flight');
+
+figure(6);
+surf(X,Y,T);
+xlabel('Beta (in degree)');
+ylabel('Alpha (in degree)');
+zlabel('Thrust (in lbs)');
+title('Thurst vs Alpha and Beta for stable level flight');
