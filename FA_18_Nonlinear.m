@@ -18,6 +18,11 @@ function xd = FA_18_Nonlinear(t,x,u)
     pE      =  x(11);       % Y position in Earth Frame, ft
     h       =  x(12);       % Z position in Earth Frame, ft
 
+%     d_AIL    = u(4);       % Aileron Deflection, rad
+%     d_RUD    = u(1);       % Rudder Deflection, rad   
+%     d_STAB   = u(2);       % Stabilator Deflection, rad
+%     T        = u(3);       % Thrust, assumed constant
+    
     d_AIL    = u(1);       % Aileron Deflection, rad
     d_RUD    = u(2);       % Rudder Deflection, rad   
     d_STAB   = u(3);       % Stabilator Deflection, rad

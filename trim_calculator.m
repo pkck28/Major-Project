@@ -6,7 +6,7 @@
 
 load('FA_18_Parameters.mat');
 
-points = 40;
+points = 37;
 
 alpha = 1:points;
 del_stab = zeros(1,points);
@@ -72,7 +72,7 @@ figure(1);
 plot(rad2deg(alpha),rad2deg(del_stab),'LineWidth',1.5);
 grid on;
 hold on;
-plot(15.29,-2.606,'+');
+% plot(15.29,-2.606,'+');
 xlabel('Alpha (in degree)');
 ylabel('Elevator Deflection (in degree)');
 title('Elevator deflection vs Alpha for stable level flight');
@@ -106,7 +106,7 @@ title('C_L vs C_D');
 figure(4);
 plot(rad2deg(alpha),V,'LineWidth',1.5);
 hold on;
-plot(15.29,350,'+');
+% plot(15.29,350,'+');
 grid on;
 xlabel('Alpha (in degree)');
 ylabel('V (in ft)');

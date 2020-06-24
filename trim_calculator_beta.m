@@ -1,5 +1,6 @@
-% For calculating the alpha for a given elevator deflection for steady
-% level flight. 
+% For calculating the trim values for steady level flight with rudder and
+% elevator jam.
+
 clc;
 clear;
 close all;
@@ -18,15 +19,13 @@ beta = deg2rad(beta);
 %% Zero moment calculation for alpa, beta, del_stab, del_ail, del_rud
 
 % Del_Stab - Alpha 
-
 for i = 1:points-1
     Cma     =  F18Aero.Cma_0 + F18Aero.Cma_1*alpha(i) + F18Aero.Cma_2*alpha(i)^2; 
     Cmds    =  F18Aero.Cmds_0 + F18Aero.Cmds_1*alpha(i) + F18Aero.Cmds_2*alpha(i)^2; 
     del_stab(i) = -Cma/Cmds;
 end
 
-% alpha - del_rud => del_ail - beta
-
+% alpha - beta => del_ail - del_rud
 del_rud = zeros(points-1,points_beta+1);
 del_ail = zeros(points-1,points_beta+1);
 
@@ -119,7 +118,7 @@ for i = 1:points-1
     end
 end
 
-%% Plotting
+%% Plotting graphs
 for i = 1:points-1
     if del_stab(i) < -deg2rad(24)
         del_stab(i) = -deg2rad(24);
@@ -137,26 +136,27 @@ ylabel('Elevator Deflection (in degree)');
 title('Elevator deflection vs Alpha for stable level flight');
 hold off;
 
-% Alpha - Rudder - Beta
-figure(2);
-
 X = rad2deg(alpha);
 Y = rad2deg(beta);
-
 [X,Y] = meshgrid(Y,X);
+
+% Alpha - Rudder - Beta
+figure(2);
 surf(X,Y,rad2deg(del_rud));
 xlabel('Beta (in degree)');
 ylabel('Alpha (in degree)');
 zlabel('Rudder Deflection (in degree)');
-title('Del_(rud) vs Alpha and Beta for stable level flight');
+title('Del_rud vs Alpha and Beta for stable level flight');
 
+% Alpha - Aileron - Beta
 figure(3);
 surf(X,Y,rad2deg(del_ail));
 xlabel('Beta (in degree)');
 ylabel('Alpha (in degree)');
 zlabel('Aileron Deflection (in degree)');
-title('Del_(ail) vs Alpha and Beta for stable level flight');
+title('Del_ail vs Alpha and Beta for stable level flight');
 
+% Alpha - Bank Angle - Beta
 figure(4);
 surf(X,Y,rad2deg(phi));
 xlabel('Beta (in degree)');
@@ -164,6 +164,7 @@ ylabel('Alpha (in degree)');
 zlabel('Bank Angle (in degree)');
 title('Bank Angle vs Alpha and Beta for stable level flight');
 
+% Alpha - Velocity - Beta
 figure(5);
 surf(X,Y,V);
 xlabel('Beta (in degree)');
@@ -171,6 +172,7 @@ ylabel('Alpha (in degree)');
 zlabel('Velocity (in ft/s)');
 title('Velocity vs Alpha and Beta for stable level flight');
 
+% Alpha - Thrust - Beta
 figure(6);
 surf(X,Y,T);
 xlabel('Beta (in degree)');
